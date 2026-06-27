@@ -1,0 +1,49 @@
+name: CI
+
+on:
+    push:
+        branches:
+            - main
+            - master
+    pull_request:
+
+jobs:
+    check:
+        name: Install And Check
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            # 按 package.json 中的 engines 安装 Node。
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20.20.0'
+
+            # 安装 pnpm，并启用依赖缓存。
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10.33.2
+
+            - name: Get pnpm store directory
+              shell: bash
+              run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+
+            - name: Setup pnpm cache
+              uses: actions/cache@v4
+              with:
+                  path: ${{ env.STORE_PATH }}
+                  key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-store-
+
+            # 严格按 lockfile 安装，保证依赖结果可复现。
+            - name: Install Dependencies
+              run: pnpm install --frozen-lockfile
+
+            # 执行项目最基础的质量检查。
+            - name: Run Project Check
+              run: pnpm check
