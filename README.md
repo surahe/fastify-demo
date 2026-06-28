@@ -5,6 +5,7 @@
 - 新手阅读导图：`docs/LEARNING_MAP.md`
 - BFF 方案说明：`docs/demo.md`
 - 结构迁移说明：`docs/迁移说明.md`
+- 纯 BFF TODO：`docs/BFF约束清单.md`
 
 ## 项目目标
 

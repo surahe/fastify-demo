@@ -9,7 +9,17 @@ import type {
     SegmentResult
 } from './live.types'
 
+/*
+ * service 层是这个 demo 最核心的地方。
+ *
+ * 为什么聚合、降级、编排逻辑应该放在 service：
+ * 1. 这些逻辑是业务行为，不是 HTTP 协议行为。
+ * 2. service 更适合同时组织多个数据片段，再决定最终返回什么。
+ * 3. 以后即使换成真实下游调用，这一层的职责也不会变。
+ */
+
 function createFailSet(query: LiveAggregateQuery): Set<string> {
+    // 把逗号分隔的字符串转成 Set，后面判断某个片段是否需要失败会更高效也更直观。
     return new Set(
         (query.failSegments || '')
             .split(',')
@@ -24,6 +34,8 @@ async function simulateSegment<T>(
     producer: () => T,
     fallback: T
 ): Promise<SegmentResult<T>> {
+    // 这个函数是 demo 的关键：它模拟“单个片段成功”或“单个片段降级”的行为。
+    // 真实项目里，这里通常会替换成调用下游 + fallback 的过程。
     if (failSet.has(segment)) {
         return {
             value: fallback,
@@ -39,6 +51,7 @@ async function simulateSegment<T>(
 }
 
 function getLiveRoom(roomId: string): LiveRoomData {
+    // 当前仓库为了聚焦框架学习，先用固定 mock 数据代替真实下游返回。
     return {
         roomId,
         title: '直播间演示数据',
@@ -56,6 +69,8 @@ export async function getLiveRoomAggregate(
 ): Promise<LiveAggregateResponse> {
     const failSet = createFailSet(query)
 
+    // Promise.all 的意义是并发获取多个片段。
+    // 对聚合接口来说，并发通常比串行更接近真实 BFF 的执行方式。
     const [room, productList, coupon, recommendation] = await Promise.all([
         simulateSegment<LiveRoomData>('room', failSet, () => getLiveRoom(roomId), {
             roomId,
@@ -110,6 +125,8 @@ export async function getLiveRoomAggregate(
             reason: result.reason
         }))
 
+    // 最终响应既返回 data，也显式返回 degradation 信息。
+    // 这样前端不仅知道“有没有拿到数据”，还知道“哪些片段其实是兜底值”。
     return {
         success: true,
         code: degradation.length > 0 ? 'PARTIAL_SUCCESS' : 'OK',
