@@ -1,7 +1,7 @@
-import 'fastify'
-import type { TtlCache } from '../lib/cache/ttl-cache'
-import type { UpstreamRegistry } from '../lib/http/upstream-registry'
-import type { MetricsStore } from '../lib/observability/metrics-store'
+import 'fastify';
+import type { TtlCache } from '../lib/cache/ttl-cache';
+import type { UpstreamRegistry } from '../lib/http/upstream-registry';
+import type { MetricsStore } from '../lib/observability/metrics-store';
 
 /*
  * 这是 TypeScript 的模块扩展声明。
@@ -14,8 +14,8 @@ import type { MetricsStore } from '../lib/observability/metrics-store'
 
 declare module 'fastify' {
     interface FastifyInstance {
-        appCache: TtlCache
-        metricsStore: MetricsStore
-        upstreamRegistry: UpstreamRegistry
+        appCache: TtlCache;
+        metricsStore: MetricsStore;
+        upstreamRegistry: UpstreamRegistry;
     }
 }

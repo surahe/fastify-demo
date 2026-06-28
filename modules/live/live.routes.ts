@@ -1,6 +1,6 @@
-import type { FastifyInstance } from 'fastify'
-import { getLiveRoomAggregateHandler } from './live.controller'
-import { getLiveRoomAggregateRouteSchema } from './live.schema'
+import type { FastifyInstance } from 'fastify';
+import { getLiveRoomAggregateHandler } from './live.controller';
+import { getLiveRoomAggregateRouteSchema } from './live.schema';
 
 /*
  * routes 层只负责“把 URL、schema 和 handler 绑在一起”。
@@ -13,7 +13,7 @@ import { getLiveRoomAggregateRouteSchema } from './live.schema'
 
 async function liveRoutes(fastify: FastifyInstance): Promise<void> {
     // 这里定义的是相对路径，真正对外的完整路径还会叠加 plugins/routes/live.ts 里的模块前缀。
-    fastify.get('/rooms/:roomId/aggregate', { schema: getLiveRoomAggregateRouteSchema }, getLiveRoomAggregateHandler)
+    fastify.get('/rooms/:roomId/aggregate', { schema: getLiveRoomAggregateRouteSchema }, getLiveRoomAggregateHandler);
 }
 
-export default liveRoutes
+export default liveRoutes;

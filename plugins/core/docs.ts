@@ -1,8 +1,8 @@
-import swagger from '@fastify/swagger'
-import swaggerUi from '@fastify/swagger-ui'
-import type { FastifyPluginAsync } from 'fastify'
-import fp from 'fastify-plugin'
-import appConfig from '../../config'
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
+import type { FastifyPluginAsync } from 'fastify';
+import fp from 'fastify-plugin';
+import appConfig from '../../config';
 
 /*
  * 这个插件负责生成 OpenAPI 文档和 Swagger UI。
@@ -16,7 +16,7 @@ import appConfig from '../../config'
 const docsPlugin: FastifyPluginAsync = async (fastify) => {
     if (!appConfig.docs.enabled) {
         // 通过配置开关控制文档是否启用，避免把调试入口默认暴露到生产环境。
-        return
+        return;
     }
 
     await fastify.register(swagger, {
@@ -25,13 +25,13 @@ const docsPlugin: FastifyPluginAsync = async (fastify) => {
             info: {
                 title: 'fastify-demo API',
                 description: 'Minimal BFF learning template for live streaming scenarios.',
-                version: '1.0.0'
+                version: '1.0.0',
             },
             servers: [
                 {
                     url: `http://localhost:${appConfig.server.port}`,
-                    description: 'Local development server'
-                }
+                    description: 'Local development server',
+                },
             ],
             components: {
                 securitySchemes: {
@@ -40,24 +40,24 @@ const docsPlugin: FastifyPluginAsync = async (fastify) => {
                         // 真实鉴权判定仍然由后端完成，BFF 当前只负责透传。
                         type: 'http',
                         scheme: 'bearer',
-                        bearerFormat: 'Bearer token'
-                    }
-                }
-            }
-        }
-    })
+                        bearerFormat: 'Bearer token',
+                    },
+                },
+            },
+        },
+    });
 
     await fastify.register(swaggerUi, {
         // Swagger UI 是给人看的网页入口，所以 routePrefix 交给配置控制更灵活。
         routePrefix: appConfig.docs.routePrefix,
         uiConfig: {
             docExpansion: 'list',
-            deepLinking: false
+            deepLinking: false,
         },
-        staticCSP: false
-    })
-}
+        staticCSP: false,
+    });
+};
 
 export default fp(docsPlugin, {
-    name: 'docs'
-})
+    name: 'docs',
+});

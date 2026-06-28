@@ -1,5 +1,5 @@
-import type { FastifyPluginAsync } from 'fastify'
-import fp from 'fastify-plugin'
+import type { FastifyPluginAsync } from 'fastify';
+import fp from 'fastify-plugin';
 
 /*
  * observability 插件负责“请求可观测性”。
@@ -17,23 +17,23 @@ const observabilityPlugin: FastifyPluginAsync = async (fastify) => {
             {
                 requestId: request.id,
                 method: request.method,
-                url: request.url
+                url: request.url,
             },
-            'request received'
-        )
-    })
+            'request received',
+        );
+    });
 
     fastify.addHook('onResponse', async (request, reply) => {
         // routeOptions.url 比 request.url 更适合做指标聚合，
         // 因为它保留的是“路由模板”，不会把 roomId 这种动态值打散成很多条。
-        const route = request.routeOptions.url || request.url
+        const route = request.routeOptions.url || request.url;
 
         fastify.metricsStore.record({
             route,
             method: request.method,
             statusCode: reply.statusCode,
-            durationMs: reply.elapsedTime
-        })
+            durationMs: reply.elapsedTime,
+        });
 
         // 出口日志和入口日志配合使用，可以快速看出一次请求的耗时和最终状态。
         request.log.info(
@@ -42,13 +42,13 @@ const observabilityPlugin: FastifyPluginAsync = async (fastify) => {
                 method: request.method,
                 url: request.url,
                 statusCode: reply.statusCode,
-                responseTime: reply.elapsedTime
+                responseTime: reply.elapsedTime,
             },
-            'request completed'
-        )
-    })
-}
+            'request completed',
+        );
+    });
+};
 
 export default fp(observabilityPlugin, {
-    name: 'observability'
-})
+    name: 'observability',
+});

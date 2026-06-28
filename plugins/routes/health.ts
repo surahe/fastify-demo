@@ -1,4 +1,4 @@
-import type { FastifyPluginAsync } from 'fastify'
+import type { FastifyPluginAsync } from 'fastify';
 
 /*
  * 这个文件放的是“平台路由”，不是业务路由。
@@ -22,22 +22,22 @@ const healthRoutePlugin: FastifyPluginAsync = async (fastify) => {
                         type: 'object',
                         properties: {
                             status: { type: 'string' },
-                            uptime: { type: 'number' }
+                            uptime: { type: 'number' },
                         },
                         additionalProperties: true,
-                        required: ['status', 'uptime']
-                    }
-                }
-            }
+                        required: ['status', 'uptime'],
+                    },
+                },
+            },
         },
         async () => {
             // /health 只回答“进程是否还活着”，所以逻辑尽量简单、尽量不依赖外部资源。
             return {
                 status: 'ok',
-                uptime: process.uptime()
-            }
-        }
-    )
+                uptime: process.uptime(),
+            };
+        },
+    );
 
     fastify.get(
         '/readiness',
@@ -52,11 +52,11 @@ const healthRoutePlugin: FastifyPluginAsync = async (fastify) => {
                             status: { type: 'string' },
                             checks: {
                                 type: 'object',
-                                additionalProperties: true
-                            }
+                                additionalProperties: true,
+                            },
                         },
                         additionalProperties: true,
-                        required: ['status', 'checks']
+                        required: ['status', 'checks'],
                     },
                     503: {
                         type: 'object',
@@ -64,20 +64,20 @@ const healthRoutePlugin: FastifyPluginAsync = async (fastify) => {
                             status: { type: 'string' },
                             checks: {
                                 type: 'object',
-                                additionalProperties: true
-                            }
+                                additionalProperties: true,
+                            },
                         },
                         additionalProperties: true,
-                        required: ['status', 'checks']
-                    }
-                }
-            }
+                        required: ['status', 'checks'],
+                    },
+                },
+            },
         },
         async (_request, reply) => {
             // /readiness 比 /health 更严格：它要回答“当前服务是否适合继续接流量”。
-            const upstream = fastify.upstreamRegistry.readiness()
-            const cacheReady = fastify.appCache.isReady()
-            const isReady = cacheReady && upstream.isReady && !fastify.isUnderPressure()
+            const upstream = fastify.upstreamRegistry.readiness();
+            const cacheReady = fastify.appCache.isReady();
+            const isReady = cacheReady && upstream.isReady && !fastify.isUnderPressure();
 
             // 503 的意义不是“进程挂了”，而是“服务当前不适合接入新的正式流量”。
             reply.code(isReady ? 200 : 503).send({
@@ -85,11 +85,11 @@ const healthRoutePlugin: FastifyPluginAsync = async (fastify) => {
                 checks: {
                     cache: cacheReady,
                     upstream,
-                    underPressure: fastify.isUnderPressure()
-                }
-            })
-        }
-    )
-}
+                    underPressure: fastify.isUnderPressure(),
+                },
+            });
+        },
+    );
+};
 
-export default healthRoutePlugin
+export default healthRoutePlugin;

@@ -1,7 +1,7 @@
-import underPressure from '@fastify/under-pressure'
-import type { FastifyPluginAsync } from 'fastify'
-import fp from 'fastify-plugin'
-import appConfig from '../../config'
+import underPressure from '@fastify/under-pressure';
+import type { FastifyPluginAsync } from 'fastify';
+import fp from 'fastify-plugin';
+import appConfig from '../../config';
 
 /*
  * under-pressure 插件负责“过载保护”。
@@ -26,10 +26,10 @@ const underPressurePlugin: FastifyPluginAsync = async (fastify) => {
                 {
                     requestId: request.id,
                     pressureType: type,
-                    pressureValue: value
+                    pressureValue: value,
                 },
-                'service is under pressure'
-            )
+                'service is under pressure',
+            );
 
             // 这里主动返回 503，而不是继续把请求交给业务层处理。
             // 原因是服务已经不健康，再进入业务只会让整体情况更糟。
@@ -37,12 +37,12 @@ const underPressurePlugin: FastifyPluginAsync = async (fastify) => {
                 success: false,
                 code: 'SERVICE_UNAVAILABLE',
                 message: 'Service is under pressure, please retry later',
-                requestId: request.id
-            })
-        }
-    })
-}
+                requestId: request.id,
+            });
+        },
+    });
+};
 
 export default fp(underPressurePlugin, {
-    name: 'under-pressure'
-})
+    name: 'under-pressure',
+});

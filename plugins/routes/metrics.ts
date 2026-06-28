@@ -1,4 +1,4 @@
-import type { FastifyPluginAsync } from 'fastify'
+import type { FastifyPluginAsync } from 'fastify';
 
 /*
  * metrics 路由负责把当前进程内采集到的指标对外暴露出来。
@@ -22,23 +22,23 @@ const metricsPlugin: FastifyPluginAsync = async (fastify) => {
                         properties: {
                             metrics: {
                                 type: 'object',
-                                additionalProperties: true
+                                additionalProperties: true,
                             },
                             alerting: {
                                 type: 'object',
-                                additionalProperties: true
-                            }
+                                additionalProperties: true,
+                            },
                         },
                         additionalProperties: true,
-                        required: ['metrics', 'alerting']
-                    }
-                }
-            }
+                        required: ['metrics', 'alerting'],
+                    },
+                },
+            },
         },
         async () => {
             // 这里返回的是“当前快照”，不是历史明细。
             // 对学习项目来说，快照足够展示采集思路，而且实现成本最低。
-            const metrics = fastify.metricsStore.snapshot()
+            const metrics = fastify.metricsStore.snapshot();
 
             return {
                 metrics,
@@ -48,12 +48,12 @@ const metricsPlugin: FastifyPluginAsync = async (fastify) => {
                         errorRateWarn: 0.03,
                         errorRateCritical: 0.1,
                         avgDurationWarnMs: 300,
-                        avgDurationCriticalMs: 800
-                    }
-                }
-            }
-        }
-    )
-}
+                        avgDurationCriticalMs: 800,
+                    },
+                },
+            };
+        },
+    );
+};
 
-export default metricsPlugin
+export default metricsPlugin;

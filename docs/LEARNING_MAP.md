@@ -83,8 +83,7 @@ server.ts
 1. `server.ts` 是程序入口
 2. 它会导入 `app.ts`，调用 `buildApp()`
 3. `app.ts` 创建 Fastify 实例
-4. `app.ts` 读取 `config/index.ts` 的配置
-   `config/index.ts` 内部会先按 `server / fastify / cors / docs / upstream` 等配置域拆成多个小 schema，再合并成统一 `envSchema`
+4. `app.ts` 读取 `config/index.ts` 的配置 `config/index.ts` 内部会先按 `server / fastify / cors / docs / upstream` 等配置域拆成多个小 schema，再合并成统一 `envSchema`
 5. `app.ts` 按顺序显式注册 `plugins/core/`，不再依赖文件名前缀
 6. `app.ts` 自动加载 `plugins/routes/`，注册健康检查、指标接口和 `live` 模块
 7. 最后 `server.ts` 调用 `app.listen()` 启动服务
@@ -134,23 +133,17 @@ plugins/routes/live.ts
 
 你可以这样理解每一步：
 
-1. `plugins/routes/live.ts`
-   把直播模块挂到 `/api/live`
+1. `plugins/routes/live.ts` 把直播模块挂到 `/api/live`
 
-2. `modules/live/live.routes.ts`
-   负责声明 URL、schema 和 controller 的绑定关系
+2. `modules/live/live.routes.ts` 负责声明 URL、schema 和 controller 的绑定关系
 
-3. `modules/live/live.schema.ts`
-   负责校验 `roomId` 和 `failSegments`
+3. `modules/live/live.schema.ts` 负责校验 `roomId` 和 `failSegments`
 
-4. `modules/live/live.controller.ts`
-   负责从 `request` 里取参数并调用 service
+4. `modules/live/live.controller.ts` 负责从 `request` 里取参数并调用 service
 
-5. `modules/live/live.types.ts`
-   负责收口这个模块内部复用的类型定义
+5. `modules/live/live.types.ts` 负责收口这个模块内部复用的类型定义
 
-6. `modules/live/live.service.ts`
-   负责组织直播间、商品列表、优惠券、推荐位这些聚合片段，并在需要时做 fallback 降级
+6. `modules/live/live.service.ts` 负责组织直播间、商品列表、优惠券、推荐位这些聚合片段，并在需要时做 fallback 降级
 
 ## 5. 每一层到底解决什么问题
 

@@ -1,5 +1,5 @@
-import type { AppConfig } from '../../config'
-import { HttpClient, type HttpClientSnapshot } from './http-client'
+import type { AppConfig } from '../../config';
+import { HttpClient, type HttpClientSnapshot } from './http-client';
 
 /*
  * UpstreamRegistry 的作用是统一管理“当前 BFF 能访问哪些后端服务”。
@@ -11,16 +11,16 @@ import { HttpClient, type HttpClientSnapshot } from './http-client'
  */
 
 export interface UpstreamReadinessReport {
-    isReady: boolean
-    configuredServices: string[]
-    services: Record<string, HttpClientSnapshot>
+    isReady: boolean;
+    configuredServices: string[];
+    services: Record<string, HttpClientSnapshot>;
 }
 
 export class UpstreamRegistry {
-    private readonly clients = new Map<string, HttpClient>()
+    private readonly clients = new Map<string, HttpClient>();
 
     constructor(config: AppConfig) {
-        const commonOptions = config.upstreamDefaults
+        const commonOptions = config.upstreamDefaults;
 
         // 只有配置了地址的下游服务才会被真正注册。
         // 这样做的好处是：本地开发可以只接一部分依赖，不需要所有服务都齐全。
@@ -30,9 +30,9 @@ export class UpstreamRegistry {
                 new HttpClient({
                     name: 'liveApi',
                     baseUrl: config.upstream.liveApiBaseUrl,
-                    ...commonOptions
-                })
-            )
+                    ...commonOptions,
+                }),
+            );
         }
 
         if (config.upstream.tradeApiBaseUrl) {
@@ -41,40 +41,40 @@ export class UpstreamRegistry {
                 new HttpClient({
                     name: 'tradeApi',
                     baseUrl: config.upstream.tradeApiBaseUrl,
-                    ...commonOptions
-                })
-            )
+                    ...commonOptions,
+                }),
+            );
         }
     }
 
     has(name: string): boolean {
-        return this.clients.has(name)
+        return this.clients.has(name);
     }
 
     get(name: string): HttpClient {
-        const client = this.clients.get(name)
+        const client = this.clients.get(name);
 
         if (!client) {
             // 这里直接抛错，是为了尽快暴露“配置缺失”或“调用方写错服务名”的问题。
-            throw new Error(`Upstream client "${name}" is not configured`)
+            throw new Error(`Upstream client "${name}" is not configured`);
         }
 
-        return client
+        return client;
     }
 
     readiness(): UpstreamReadinessReport {
         // readiness 不要求下游一定“完全成功”，但至少要知道熔断器是否已经处于 open。
         // 如果某个关键依赖已经完全不可用，平台可以根据这里的结果把自己标成 degraded。
         const services = Object.fromEntries(
-            Array.from(this.clients.entries()).map(([name, client]) => [name, client.snapshot()])
-        )
+            Array.from(this.clients.entries()).map(([name, client]) => [name, client.snapshot()]),
+        );
 
-        const isReady = Object.values(services).every((item) => item.circuitState !== 'open')
+        const isReady = Object.values(services).every((item) => item.circuitState !== 'open');
 
         return {
             isReady,
             configuredServices: Array.from(this.clients.keys()),
-            services
-        }
+            services,
+        };
     }
 }

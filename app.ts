@@ -1,18 +1,18 @@
-import autoLoad from '@fastify/autoload'
-import { randomUUID } from 'node:crypto'
-import Fastify, { type FastifyError, type FastifyInstance } from 'fastify'
-import { join } from 'node:path'
-import appConfig from './config'
-import { AppError, isAppError } from './errors/app-error'
-import { ErrorCodes } from './errors/error-codes'
-import corsPlugin from './plugins/core/cors'
-import docsPlugin from './plugins/core/docs'
-import observabilityPlugin from './plugins/core/observability'
-import platformPlugin from './plugins/core/platform'
-import rateLimitPlugin from './plugins/core/rate-limit'
-import requestContextPlugin from './plugins/core/request-context'
-import securityPlugin from './plugins/core/security'
-import underPressurePlugin from './plugins/core/under-pressure'
+import autoLoad from '@fastify/autoload';
+import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
+import { randomUUID } from 'node:crypto';
+import { join } from 'node:path';
+import appConfig from './config';
+import { AppError, isAppError } from './errors/app-error';
+import { ErrorCodes } from './errors/error-codes';
+import corsPlugin from './plugins/core/cors';
+import docsPlugin from './plugins/core/docs';
+import observabilityPlugin from './plugins/core/observability';
+import platformPlugin from './plugins/core/platform';
+import rateLimitPlugin from './plugins/core/rate-limit';
+import requestContextPlugin from './plugins/core/request-context';
+import securityPlugin from './plugins/core/security';
+import underPressurePlugin from './plugins/core/under-pressure';
 
 /*
  * 这是整个应用真正的“组装中心”。
@@ -24,14 +24,14 @@ import underPressurePlugin from './plugins/core/under-pressure'
  */
 
 // 显式告诉 autoload：当前运行时可以直接加载 .ts 插件文件。
-process.env.FASTIFY_AUTOLOAD_TYPESCRIPT ??= '1'
+process.env.FASTIFY_AUTOLOAD_TYPESCRIPT ??= '1';
 
 interface BuildAppOptions {
-    logger?: boolean
+    logger?: boolean;
 }
 
 export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
-    const loggerEnabled = options.logger ?? appConfig.fastify.logger
+    const loggerEnabled = options.logger ?? appConfig.fastify.logger;
 
     // 这里创建 Fastify 实例，并把和“整站行为”相关的底层选项一次性定下来。
     // 这些选项比具体业务更底层，所以放在应用初始化阶段最合适。
@@ -39,7 +39,7 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
         logger: loggerEnabled
             ? {
                   // 日志级别统一来自配置中心，避免散落硬编码。
-                  level: appConfig.fastify.logLevel
+                  level: appConfig.fastify.logLevel,
               }
             : false,
         // trustProxy 让 Fastify 在有网关 / 反向代理时，正确识别真实客户端信息。
@@ -53,28 +53,28 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
                 // 去掉 schema 未声明的额外字段，避免无意义参数继续流入业务层。
                 removeAdditional: 'all',
                 // 把 "123" 这种字符串自动转成 number / boolean 等，更适合处理 HTTP 入参。
-                coerceTypes: true
-            }
-        }
-    })
+                coerceTypes: true,
+            },
+        },
+    });
 
     // core plugins 改为显式注册，顺序由这里控制，不再依赖文件名前缀。
     // 这样做的原因是：插件顺序本身就是系统行为的一部分，写在这里最直观。
-    app.register(requestContextPlugin)
-    app.register(securityPlugin)
-    app.register(corsPlugin)
-    app.register(platformPlugin)
-    app.register(observabilityPlugin)
-    app.register(rateLimitPlugin)
-    app.register(docsPlugin)
-    app.register(underPressurePlugin)
+    app.register(requestContextPlugin);
+    app.register(securityPlugin);
+    app.register(corsPlugin);
+    app.register(platformPlugin);
+    app.register(observabilityPlugin);
+    app.register(rateLimitPlugin);
+    app.register(docsPlugin);
+    app.register(underPressurePlugin);
 
     // 自动注册 routes 插件，适合 BFF 里持续扩展接口模块。
     // 这里和 core plugin 不同：业务路由会越来越多，所以更适合用 autoload 自动发现。
     app.register(autoLoad, {
         dir: join(__dirname, 'plugins', 'routes'),
-        dirNameRoutePrefix: false
-    })
+        dirNameRoutePrefix: false,
+    });
 
     // 统一错误处理器的意义是：不管错误来自 schema、业务、下游还是平台插件，
     // 最终都在这里收口成一致的响应格式，前端和日志都更容易处理。
@@ -82,10 +82,10 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
         request.log.error(
             {
                 requestId: request.id,
-                error
+                error,
             },
-            'request failed'
-        )
+            'request failed',
+        );
 
         if (isAppError(error)) {
             reply.status(error.statusCode).send({
@@ -93,9 +93,9 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
                 code: error.code,
                 message: error.message,
                 requestId: request.id,
-                details: error.expose ? error.details : undefined
-            })
-            return
+                details: error.expose ? error.details : undefined,
+            });
+            return;
         }
 
         if (error.validation) {
@@ -106,9 +106,9 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
                 code: ErrorCodes.validation,
                 message: error.message,
                 requestId: request.id,
-                details: error.validation
-            })
-            return
+                details: error.validation,
+            });
+            return;
         }
 
         if (error.statusCode === 429) {
@@ -117,12 +117,12 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
                 success: false,
                 code: ErrorCodes.tooManyRequests,
                 message: 'Too many requests',
-                requestId: request.id
-            })
-            return
+                requestId: request.id,
+            });
+            return;
         }
 
-        const statusCode = error.statusCode ?? 500
+        const statusCode = error.statusCode ?? 500;
 
         // 剩下的错误统一走兜底逻辑：
         // - 5xx 不暴露实现细节，避免把内部错误直接泄漏给前端
@@ -131,9 +131,9 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
             success: false,
             code: ErrorCodes.internal,
             message: statusCode >= 500 ? 'Something went wrong' : error.message,
-            requestId: request.id
-        })
-    })
+            requestId: request.id,
+        });
+    });
 
     // 未匹配到路由时，统一返回标准 404 结构。
     // 这样前端不需要区分“业务错误响应”和“路由不存在响应”的数据格式。
@@ -142,11 +142,11 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
             success: false,
             code: ErrorCodes.notFound,
             message: 'Route not found',
-            requestId: request.id
-        })
-    })
+            requestId: request.id,
+        });
+    });
 
-    return app
+    return app;
 }
 
-export default buildApp
+export default buildApp;

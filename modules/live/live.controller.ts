@@ -1,6 +1,6 @@
-import type { FastifyReply, FastifyRequest } from 'fastify'
-import { getLiveRoomAggregate } from './live.service'
-import type { LiveAggregateQuery, LiveRoomParams } from './live.types'
+import type { FastifyReply, FastifyRequest } from 'fastify';
+import { getLiveRoomAggregate } from './live.service';
+import type { LiveAggregateQuery, LiveRoomParams } from './live.types';
 
 /*
  * controller 层负责“接 HTTP 请求，再把干净的参数交给 service”。
@@ -13,8 +13,8 @@ import type { LiveAggregateQuery, LiveRoomParams } from './live.types'
 
 export async function getLiveRoomAggregateHandler(
     request: FastifyRequest<{ Params: LiveRoomParams; Querystring: LiveAggregateQuery }>,
-    _reply: FastifyReply
+    _reply: FastifyReply,
 ) {
     // controller 只做最轻的一层转发：从 request 里取参数，然后调用 service。
-    return getLiveRoomAggregate(request.params.roomId, request.query)
+    return getLiveRoomAggregate(request.params.roomId, request.query);
 }

@@ -1,4 +1,4 @@
-import { ErrorCodes, type ErrorCode } from './error-codes'
+import { ErrorCodes, type ErrorCode } from './error-codes';
 
 /*
  * 这里定义项目里的“统一错误模型”。
@@ -10,28 +10,28 @@ import { ErrorCodes, type ErrorCode } from './error-codes'
  */
 
 export interface AppErrorOptions {
-    statusCode: number
-    code: ErrorCode
-    message: string
-    details?: unknown
-    expose?: boolean
+    statusCode: number;
+    code: ErrorCode;
+    message: string;
+    details?: unknown;
+    expose?: boolean;
 }
 
 export class AppError extends Error {
-    statusCode: number
-    code: ErrorCode
-    details?: unknown
-    expose: boolean
+    statusCode: number;
+    code: ErrorCode;
+    details?: unknown;
+    expose: boolean;
 
     constructor(options: AppErrorOptions) {
-        super(options.message)
-        this.name = 'AppError'
-        this.statusCode = options.statusCode
-        this.code = options.code
-        this.details = options.details
+        super(options.message);
+        this.name = 'AppError';
+        this.statusCode = options.statusCode;
+        this.code = options.code;
+        this.details = options.details;
         // expose 用来控制 details / message 是否适合暴露给前端。
         // 默认规则是：4xx 更偏客户端问题，可以暴露；5xx 更偏服务内部问题，默认不暴露。
-        this.expose = options.expose ?? options.statusCode < 500
+        this.expose = options.expose ?? options.statusCode < 500;
     }
 }
 
@@ -42,9 +42,9 @@ export class ConflictError extends AppError {
             statusCode: 409,
             code: ErrorCodes.conflict,
             message,
-            details
-        })
-        this.name = 'ConflictError'
+            details,
+        });
+        this.name = 'ConflictError';
     }
 }
 
@@ -55,9 +55,9 @@ export class UpstreamTimeoutError extends AppError {
             statusCode: 504,
             code: ErrorCodes.upstreamTimeout,
             message: `${service} request timed out`,
-            details
-        })
-        this.name = 'UpstreamTimeoutError'
+            details,
+        });
+        this.name = 'UpstreamTimeoutError';
     }
 }
 
@@ -68,9 +68,9 @@ export class UpstreamUnavailableError extends AppError {
             statusCode: 503,
             code: ErrorCodes.upstreamUnavailable,
             message: `${service} is temporarily unavailable`,
-            details
-        })
-        this.name = 'UpstreamUnavailableError'
+            details,
+        });
+        this.name = 'UpstreamUnavailableError';
     }
 }
 
@@ -81,9 +81,9 @@ export class UpstreamBadResponseError extends AppError {
             statusCode: 502,
             code: ErrorCodes.upstreamBadResponse,
             message: `${service} returned an invalid response`,
-            details
-        })
-        this.name = 'UpstreamBadResponseError'
+            details,
+        });
+        this.name = 'UpstreamBadResponseError';
     }
 }
 
@@ -94,13 +94,13 @@ export class TooManyRequestsError extends AppError {
             statusCode: 429,
             code: ErrorCodes.tooManyRequests,
             message,
-            details
-        })
-        this.name = 'TooManyRequestsError'
+            details,
+        });
+        this.name = 'TooManyRequestsError';
     }
 }
 
 export function isAppError(error: unknown): error is AppError {
     // 类型守卫的价值是：在统一错误处理器里可以安全访问 statusCode、code、details 等字段。
-    return error instanceof AppError
+    return error instanceof AppError;
 }

@@ -1,4 +1,4 @@
-import type { FastifySchema } from 'fastify'
+import type { FastifySchema } from 'fastify';
 
 /*
  * schema 层负责定义“这条接口允许什么输入、承诺什么输出”。
@@ -14,10 +14,10 @@ const liveRoomParamsJsonSchema = {
         type: 'object',
         required: ['roomId'],
         properties: {
-            roomId: { type: 'string', minLength: 1 }
-        }
-    }
-} as const
+            roomId: { type: 'string', minLength: 1 },
+        },
+    },
+} as const;
 
 export const getLiveRoomAggregateRouteSchema: FastifySchema = {
     tags: ['live'],
@@ -28,8 +28,8 @@ export const getLiveRoomAggregateRouteSchema: FastifySchema = {
         type: 'object',
         properties: {
             // failSegments 是当前 demo 专用参数，用来模拟某些片段失败后的降级效果。
-            failSegments: { type: 'string' }
-        }
+            failSegments: { type: 'string' },
+        },
     },
     response: {
         200: {
@@ -42,15 +42,15 @@ export const getLiveRoomAggregateRouteSchema: FastifySchema = {
                 message: { type: 'string' },
                 data: {
                     type: 'object',
-                    additionalProperties: true
+                    additionalProperties: true,
                 },
                 degradation: {
                     type: 'object',
-                    additionalProperties: true
-                }
+                    additionalProperties: true,
+                },
             },
             additionalProperties: true,
-            required: ['success', 'code', 'message', 'data', 'degradation']
-        }
-    }
-}
+            required: ['success', 'code', 'message', 'data', 'degradation'],
+        },
+    },
+};

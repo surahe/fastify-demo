@@ -1,7 +1,7 @@
-import rateLimit from '@fastify/rate-limit'
-import type { FastifyPluginAsync } from 'fastify'
-import fp from 'fastify-plugin'
-import appConfig from '../../config'
+import rateLimit from '@fastify/rate-limit';
+import type { FastifyPluginAsync } from 'fastify';
+import fp from 'fastify-plugin';
+import appConfig from '../../config';
 
 /*
  * 限流插件的作用是保护 BFF 不被短时间的大量请求打垮。
@@ -21,13 +21,13 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
         addHeadersOnExceeding: {
             'x-ratelimit-limit': true,
             'x-ratelimit-remaining': true,
-            'x-ratelimit-reset': true
+            'x-ratelimit-reset': true,
         },
         // 即使限流插件内部偶发出错，也尽量不要把整个请求链路一起拖挂。
-        skipOnError: true
-    })
-}
+        skipOnError: true,
+    });
+};
 
 export default fp(rateLimitPlugin, {
-    name: 'rate-limit'
-})
+    name: 'rate-limit',
+});

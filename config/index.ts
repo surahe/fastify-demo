@@ -1,5 +1,5 @@
-import dotenv from 'dotenv'
-import { z } from 'zod'
+import dotenv from 'dotenv';
+import { z } from 'zod';
 
 /*
  * 这一层负责“配置收口”。
@@ -11,9 +11,9 @@ import { z } from 'zod'
  */
 
 // 启动时优先读取 .env，后面的 zod 校验直接消费 process.env。
-dotenv.config()
+dotenv.config();
 
-export type AppEnv = 'development' | 'test' | 'production'
+export type AppEnv = 'development' | 'test' | 'production';
 
 // AppConfig 是“项目内部真正使用的配置结构”。
 // 你可以把它理解成：所有环境变量在经过校验、转换、整理之后，最终会变成什么样子。
@@ -24,63 +24,63 @@ export type AppEnv = 'development' | 'test' | 'production'
 // 3. 有了这层结构定义后，IDE 会给出更清晰的类型提示，后续维护也更稳定。
 export interface AppConfig {
     // env 用来区分不同运行环境，很多开关都会依赖它。
-    env: AppEnv
+    env: AppEnv;
     server: {
         // host / port 决定 HTTP 服务监听在哪个地址和端口上。
-        host: string
-        port: number
-    }
+        host: string;
+        port: number;
+    };
     fastify: {
         // fastify 这组配置不是业务配置，而是框架自身行为的配置。
-        logger: boolean
-        logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
-        requestIdHeader: string
-        trustProxy: boolean
-    }
+        logger: boolean;
+        logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
+        requestIdHeader: string;
+        trustProxy: boolean;
+    };
     cors: {
         // 浏览器跨域白名单，代码里用数组最方便，所以最终会整理成 string[]。
-        allowedOrigins: string[]
-    }
+        allowedOrigins: string[];
+    };
     rateLimit: {
         // 限流属于平台保护能力，用来限制单位时间内允许的请求量。
-        globalMax: number
-        timeWindow: string
-    }
+        globalMax: number;
+        timeWindow: string;
+    };
     docs: {
         // docs 控制 Swagger / OpenAPI 文档是否开启，以及暴露在哪个路径。
-        enabled: boolean
-        routePrefix: string
-    }
+        enabled: boolean;
+        routePrefix: string;
+    };
     underPressure: {
         // underPressure 这一组控制“服务过载时”的保护策略。
-        retryAfter: number
-        maxEventLoopDelay: number
-        maxHeapUsedBytes: number
-        maxRssBytes: number
-        maxEventLoopUtilization: number
-    }
+        retryAfter: number;
+        maxEventLoopDelay: number;
+        maxHeapUsedBytes: number;
+        maxRssBytes: number;
+        maxEventLoopUtilization: number;
+    };
     cache: {
         // 当前项目虽然不接 Redis，但仍然保留了一个本地内存缓存能力，所以这里要有缓存 TTL 配置。
-        ttlMs: number
-    }
+        ttlMs: number;
+    };
     upstreamDefaults: {
         // 这组是“调用后端服务时的默认策略”，属于 BFF 非常关键的基础配置。
-        timeoutMs: number
-        retries: number
-        retryDelayMs: number
-        circuitBreakerThreshold: number
-        circuitBreakerResetMs: number
-    }
+        timeoutMs: number;
+        retries: number;
+        retryDelayMs: number;
+        circuitBreakerThreshold: number;
+        circuitBreakerResetMs: number;
+    };
     upstream: {
         // 这里是真实后端服务的地址入口。
         // 当前示例里只预留了 live / trade 两个服务，后续可按真实需求继续扩。
-        liveApiBaseUrl?: string
-        tradeApiBaseUrl?: string
-    }
+        liveApiBaseUrl?: string;
+        tradeApiBaseUrl?: string;
+    };
 }
 
-const DEFAULT_HOST = '0.0.0.0'
-const DEFAULT_PORT = 3000
+const DEFAULT_HOST = '0.0.0.0';
+const DEFAULT_PORT = 3000;
 
 // 下面这些 xxxEnvSchema 可以理解成“各个配置分组自己的校验规则”。
 //
@@ -94,16 +94,16 @@ const DEFAULT_PORT = 3000
 const appEnvSchema = z.object({
     // NODE_ENV 限制运行环境只能是这三个值之一。
     // default('development') 表示如果没配，就默认按开发环境处理。
-    NODE_ENV: z.enum(['development', 'test', 'production']).default('development')
-})
+    NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+});
 
 const serverEnvSchema = z.object({
     // HOST 是服务监听地址。0.0.0.0 通常表示监听所有网卡，适合本地开发和容器部署。
     HOST: z.string().trim().min(1).default(DEFAULT_HOST),
     // z.coerce.number() 的意思是：就算环境变量原本是字符串，也先帮你转成 number 再校验。
     // int().positive() 则是在保证它必须是一个正整数端口号。
-    PORT: z.coerce.number().int().positive().default(DEFAULT_PORT)
-})
+    PORT: z.coerce.number().int().positive().default(DEFAULT_PORT),
+});
 
 const fastifyEnvSchema = z.object({
     // 这一组控制 Fastify 本身的运行行为，而不是你的业务接口逻辑。
@@ -114,21 +114,21 @@ const fastifyEnvSchema = z.object({
     REQUEST_ID_HEADER: z.string().trim().min(1).default('x-request-id'),
     // TRUST_PROXY 表示是否信任反向代理透传过来的客户端信息。
     // 如果前面有 Nginx、网关、Ingress，这个开关通常要开。
-    TRUST_PROXY: z.coerce.boolean().default(true)
-})
+    TRUST_PROXY: z.coerce.boolean().default(true),
+});
 
 const corsEnvSchema = z.object({
     // 这里保留字符串格式，是因为环境变量里写逗号分隔最方便；
     // 真正给代码用时，会在后面再转成数组。
-    CORS_ALLOWED_ORIGINS: z.string().default('http://localhost:5173,http://127.0.0.1:5173')
-})
+    CORS_ALLOWED_ORIGINS: z.string().default('http://localhost:5173,http://127.0.0.1:5173'),
+});
 
 const rateLimitEnvSchema = z.object({
     // RATE_LIMIT_MAX 表示在一个时间窗口内，最多允许多少次请求通过。
     RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
     // RATE_LIMIT_WINDOW 表示限流统计窗口，比如 1 minute、10 seconds 这种格式。
-    RATE_LIMIT_WINDOW: z.string().trim().min(1).default('1 minute')
-})
+    RATE_LIMIT_WINDOW: z.string().trim().min(1).default('1 minute'),
+});
 
 const docsEnvSchema = z.object({
     // 文档相关配置先在这里校验，后面 appConfig 阶段还会再叠加“生产环境默认关闭”的项目约定。
@@ -136,8 +136,8 @@ const docsEnvSchema = z.object({
     SWAGGER_ENABLED: z.coerce.boolean().default(true),
     // SWAGGER_ROUTE_PREFIX 是 Swagger UI 的访问路径。
     // 默认是 /docs，所以本地一般访问 http://localhost:3000/docs
-    SWAGGER_ROUTE_PREFIX: z.string().trim().min(1).default('/docs')
-})
+    SWAGGER_ROUTE_PREFIX: z.string().trim().min(1).default('/docs'),
+});
 
 const underPressureEnvSchema = z.object({
     // under-pressure 用来保护服务在事件循环、内存等指标过高时及时降级或拒绝流量。
@@ -150,13 +150,13 @@ const underPressureEnvSchema = z.object({
     // MAX_RSS_BYTES 控制进程总占用内存阈值；0 表示当前不启用这个阈值。
     UNDER_PRESSURE_MAX_RSS_BYTES: z.coerce.number().int().min(0).default(0),
     // MAX_EVENT_LOOP_UTILIZATION 控制事件循环利用率阈值，越接近 1 说明越繁忙。
-    UNDER_PRESSURE_MAX_EVENT_LOOP_UTILIZATION: z.coerce.number().min(0).max(1).default(0.98)
-})
+    UNDER_PRESSURE_MAX_EVENT_LOOP_UTILIZATION: z.coerce.number().min(0).max(1).default(0.98),
+});
 
 const cacheEnvSchema = z.object({
     // 当前是本地缓存 TTL。即使未来不接 Redis，这个配置也能控制内存缓存保留多久。
-    CACHE_TTL_MS: z.coerce.number().int().positive().default(30_000)
-})
+    CACHE_TTL_MS: z.coerce.number().int().positive().default(30_000),
+});
 
 const upstreamDefaultsEnvSchema = z.object({
     // 这一组是 BFF 调后端服务时最关键的默认策略：
@@ -170,8 +170,8 @@ const upstreamDefaultsEnvSchema = z.object({
     // CIRCUIT_BREAKER_THRESHOLD 表示连续失败多少次后，把熔断器切到 open。
     UPSTREAM_CIRCUIT_BREAKER_THRESHOLD: z.coerce.number().int().positive().default(5),
     // CIRCUIT_BREAKER_RESET_MS 表示熔断器打开后，要过多久才允许再试探一次。
-    UPSTREAM_CIRCUIT_BREAKER_RESET_MS: z.coerce.number().int().positive().default(10_000)
-})
+    UPSTREAM_CIRCUIT_BREAKER_RESET_MS: z.coerce.number().int().positive().default(10_000),
+});
 
 const upstreamEnvSchema = z.object({
     // 这里是具体后端服务地址。
@@ -179,8 +179,8 @@ const upstreamEnvSchema = z.object({
     // LIVE_API_BASE_URL 是直播相关后端服务的基础地址。
     LIVE_API_BASE_URL: z.string().trim().optional(),
     // TRADE_API_BASE_URL 是交易相关后端服务的基础地址。
-    TRADE_API_BASE_URL: z.string().trim().optional()
-})
+    TRADE_API_BASE_URL: z.string().trim().optional(),
+});
 
 // 对外仍然保留一个统一入口，方便 parse(process.env) 时一次完成校验。
 // 这一步相当于把“分域维护”和“统一校验”两个目标同时兼顾了。
@@ -194,11 +194,11 @@ const envSchema = z.object({
     ...underPressureEnvSchema.shape,
     ...cacheEnvSchema.shape,
     ...upstreamDefaultsEnvSchema.shape,
-    ...upstreamEnvSchema.shape
-})
+    ...upstreamEnvSchema.shape,
+});
 
-const envValues = envSchema.parse(process.env)
-const env: AppEnv = envValues.NODE_ENV
+const envValues = envSchema.parse(process.env);
+const env: AppEnv = envValues.NODE_ENV;
 
 // 这里开始从“环境变量校验结果 envValues”转换成“项目内部统一配置 appConfig”。
 //
@@ -213,7 +213,7 @@ const appConfig: AppConfig = {
         // host 决定服务实际监听在哪个地址。
         host: envValues.HOST,
         // port 决定服务监听端口。
-        port: envValues.PORT
+        port: envValues.PORT,
     },
     fastify: {
         // 测试环境通常关闭 logger，避免测试输出过于吵杂。
@@ -223,26 +223,26 @@ const appConfig: AppConfig = {
         // requestIdHeader 告诉 Fastify 去哪个 header 里找现成的 requestId。
         requestIdHeader: envValues.REQUEST_ID_HEADER,
         // trustProxy 决定 Fastify 是否信任代理透传来的客户端信息。
-        trustProxy: envValues.TRUST_PROXY
+        trustProxy: envValues.TRUST_PROXY,
     },
     cors: {
         // 配置文件里用逗号分隔最方便书写，这里统一转换成代码更容易消费的 string[]。
         allowedOrigins: envValues.CORS_ALLOWED_ORIGINS.split(',')
             .map((item) => item.trim())
-            .filter(Boolean)
+            .filter(Boolean),
     },
     rateLimit: {
         // globalMax 是整站限流阈值。
         globalMax: envValues.RATE_LIMIT_MAX,
         // timeWindow 是整站限流时间窗口。
-        timeWindow: envValues.RATE_LIMIT_WINDOW
+        timeWindow: envValues.RATE_LIMIT_WINDOW,
     },
     docs: {
         // Swagger 在本地 / 测试环境很有价值，但生产环境默认关闭更安全。
         // 所以这里不是单纯读取环境变量，而是附带了一条“项目约定规则”。
         enabled: envValues.SWAGGER_ENABLED && env !== 'production',
         // routePrefix 是 Swagger UI 的最终访问路径前缀。
-        routePrefix: envValues.SWAGGER_ROUTE_PREFIX
+        routePrefix: envValues.SWAGGER_ROUTE_PREFIX,
     },
     underPressure: {
         // retryAfter 是过载时建议客户端重试的等待秒数。
@@ -254,11 +254,11 @@ const appConfig: AppConfig = {
         // maxRssBytes 是进程总内存占用阈值。
         maxRssBytes: envValues.UNDER_PRESSURE_MAX_RSS_BYTES,
         // maxEventLoopUtilization 是事件循环利用率阈值。
-        maxEventLoopUtilization: envValues.UNDER_PRESSURE_MAX_EVENT_LOOP_UTILIZATION
+        maxEventLoopUtilization: envValues.UNDER_PRESSURE_MAX_EVENT_LOOP_UTILIZATION,
     },
     cache: {
         // ttlMs 是本地缓存默认保留时间，单位是毫秒。
-        ttlMs: envValues.CACHE_TTL_MS
+        ttlMs: envValues.CACHE_TTL_MS,
     },
     upstreamDefaults: {
         // timeoutMs 是所有下游请求默认超时时间。
@@ -270,14 +270,14 @@ const appConfig: AppConfig = {
         // circuitBreakerThreshold 是默认熔断触发阈值。
         circuitBreakerThreshold: envValues.UPSTREAM_CIRCUIT_BREAKER_THRESHOLD,
         // circuitBreakerResetMs 是默认熔断恢复探测时间。
-        circuitBreakerResetMs: envValues.UPSTREAM_CIRCUIT_BREAKER_RESET_MS
+        circuitBreakerResetMs: envValues.UPSTREAM_CIRCUIT_BREAKER_RESET_MS,
     },
     upstream: {
         // 空字符串统一转成 undefined，避免下游注册逻辑把“空地址”当成有效配置。
         // 这样写后，后面的 UpstreamRegistry 就可以通过 if (baseUrl) 这种方式判断是否需要注册该下游。
         liveApiBaseUrl: envValues.LIVE_API_BASE_URL || undefined,
-        tradeApiBaseUrl: envValues.TRADE_API_BASE_URL || undefined
-    }
-}
+        tradeApiBaseUrl: envValues.TRADE_API_BASE_URL || undefined,
+    },
+};
 
-export default appConfig
+export default appConfig;

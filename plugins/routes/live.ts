@@ -1,5 +1,5 @@
-import type { FastifyPluginAsync } from 'fastify'
-import liveRoutes from '../../modules/live/live.routes'
+import type { FastifyPluginAsync } from 'fastify';
+import liveRoutes from '../../modules/live/live.routes';
 
 /*
  * 这是“业务模块入口插件”。
@@ -12,7 +12,7 @@ import liveRoutes from '../../modules/live/live.routes'
 
 const livePlugin: FastifyPluginAsync = async (fastify) => {
     // 这里给整个 live 模块挂上统一前缀，模块内部就只需要关心自己的相对路径。
-    await fastify.register(liveRoutes, { prefix: '/api/live' })
-}
+    await fastify.register(liveRoutes, { prefix: '/api/live' });
+};
 
-export default livePlugin
+export default livePlugin;

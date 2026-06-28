@@ -6,8 +6,8 @@ import type {
     LiveProductItem,
     LiveRecommendationItem,
     LiveRoomData,
-    SegmentResult
-} from './live.types'
+    SegmentResult,
+} from './live.types';
 
 /*
  * service 层是这个 demo 最核心的地方。
@@ -24,15 +24,15 @@ function createFailSet(query: LiveAggregateQuery): Set<string> {
         (query.failSegments || '')
             .split(',')
             .map((item) => item.trim())
-            .filter(Boolean)
-    )
+            .filter(Boolean),
+    );
 }
 
 async function simulateSegment<T>(
     segment: string,
     failSet: Set<string>,
     producer: () => T,
-    fallback: T
+    fallback: T,
 ): Promise<SegmentResult<T>> {
     // 这个函数是 demo 的关键：它模拟“单个片段成功”或“单个片段降级”的行为。
     // 真实项目里，这里通常会替换成调用下游 + fallback 的过程。
@@ -40,14 +40,14 @@ async function simulateSegment<T>(
         return {
             value: fallback,
             degraded: true,
-            reason: `${segment} degraded to fallback`
-        }
+            reason: `${segment} degraded to fallback`,
+        };
     }
 
     return {
         value: producer(),
-        degraded: false
-    }
+        degraded: false,
+    };
 }
 
 function getLiveRoom(roomId: string): LiveRoomData {
@@ -58,16 +58,13 @@ function getLiveRoom(roomId: string): LiveRoomData {
         status: 'living',
         streamer: {
             id: 'anchor-1001',
-            nickname: '演示主播'
-        }
-    }
+            nickname: '演示主播',
+        },
+    };
 }
 
-export async function getLiveRoomAggregate(
-    roomId: string,
-    query: LiveAggregateQuery
-): Promise<LiveAggregateResponse> {
-    const failSet = createFailSet(query)
+export async function getLiveRoomAggregate(roomId: string, query: LiveAggregateQuery): Promise<LiveAggregateResponse> {
+    const failSet = createFailSet(query);
 
     // Promise.all 的意义是并发获取多个片段。
     // 对聚合接口来说，并发通常比串行更接近真实 BFF 的执行方式。
@@ -76,16 +73,16 @@ export async function getLiveRoomAggregate(
             roomId,
             title: '直播间信息降级',
             status: 'unknown',
-            streamer: null
+            streamer: null,
         }),
         simulateSegment(
             'productList',
             failSet,
             (): LiveProductItem[] => [
                 { productId: 'sku-1001', name: '演示商品 A', price: 99 },
-                { productId: 'sku-1002', name: '演示商品 B', price: 159 }
+                { productId: 'sku-1002', name: '演示商品 B', price: 159 },
             ],
-            []
+            [],
         ),
         simulateSegment<LiveCouponData>(
             'coupon',
@@ -93,37 +90,37 @@ export async function getLiveRoomAggregate(
             () => ({
                 available: true,
                 couponId: 'coupon-888',
-                discountText: '满199减20'
+                discountText: '满199减20',
             }),
             {
-                available: false
-            }
+                available: false,
+            },
         ),
         simulateSegment(
             'recommendation',
             failSet,
             (): LiveRecommendationItem[] => [
                 { productId: 'sku-2001', name: '推荐商品 1' },
-                { productId: 'sku-2002', name: '推荐商品 2' }
+                { productId: 'sku-2002', name: '推荐商品 2' },
             ],
-            []
-        )
-    ])
+            [],
+        ),
+    ]);
 
     const degradationSources: Array<[string, { degraded: boolean; reason?: string }]> = [
         ['room', room],
         ['productList', productList],
         ['coupon', coupon],
-        ['recommendation', recommendation]
-    ]
+        ['recommendation', recommendation],
+    ];
 
     const degradation: DegradationItem[] = degradationSources
         .filter(([, result]) => result.degraded)
         .map(([segment, result]) => ({
             segment,
             strategy: 'fallback',
-            reason: result.reason
-        }))
+            reason: result.reason,
+        }));
 
     // 最终响应既返回 data，也显式返回 degradation 信息。
     // 这样前端不仅知道“有没有拿到数据”，还知道“哪些片段其实是兜底值”。
@@ -135,11 +132,11 @@ export async function getLiveRoomAggregate(
             room: room.value,
             productList: productList.value,
             coupon: coupon.value,
-            recommendation: recommendation.value
+            recommendation: recommendation.value,
         },
         degradation: {
             degraded: degradation.length > 0,
-            items: degradation
-        }
-    }
+            items: degradation,
+        },
+    };
 }

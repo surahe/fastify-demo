@@ -8,61 +8,61 @@
  */
 
 interface CacheEntry<T> {
-    value: T
-    expiresAt: number
+    value: T;
+    expiresAt: number;
 }
 
 export interface TtlCacheOptions {
-    defaultTtlMs: number
+    defaultTtlMs: number;
 }
 
 export class TtlCache {
-    private readonly store = new Map<string, CacheEntry<unknown>>()
-    private readonly defaultTtlMs: number
+    private readonly store = new Map<string, CacheEntry<unknown>>();
+    private readonly defaultTtlMs: number;
 
     constructor(options: TtlCacheOptions) {
-        this.defaultTtlMs = options.defaultTtlMs
+        this.defaultTtlMs = options.defaultTtlMs;
     }
 
     get<T>(key: string): T | undefined {
-        const entry = this.store.get(key)
+        const entry = this.store.get(key);
 
         if (!entry) {
-            return undefined
+            return undefined;
         }
 
         // 这里采用“读取时顺便检查过期”的懒删除策略。
         // 好处是实现简单，不需要额外定时任务去扫描所有 key。
         if (Date.now() > entry.expiresAt) {
-            this.store.delete(key)
-            return undefined
+            this.store.delete(key);
+            return undefined;
         }
 
-        return entry.value as T
+        return entry.value as T;
     }
 
     set<T>(key: string, value: T, ttlMs = this.defaultTtlMs): void {
         // 写入时就把过期时间算好，后续读取只需要比较时间戳即可。
         this.store.set(key, {
             value,
-            expiresAt: Date.now() + ttlMs
-        })
+            expiresAt: Date.now() + ttlMs,
+        });
     }
 
     delete(key: string): void {
-        this.store.delete(key)
+        this.store.delete(key);
     }
 
     clear(): void {
-        this.store.clear()
+        this.store.clear();
     }
 
     isReady(): boolean {
         // 这个缓存是纯内存实现，没有外部依赖，所以只要进程活着就认为它是 ready 的。
-        return true
+        return true;
     }
 
     size(): number {
-        return this.store.size
+        return this.store.size;
     }
 }

@@ -15,7 +15,7 @@ export const ErrorCodes = {
     upstreamUnavailable: 'UPSTREAM_UNAVAILABLE',
     upstreamBadResponse: 'UPSTREAM_BAD_RESPONSE',
     tooManyRequests: 'TOO_MANY_REQUESTS',
-    internal: 'INTERNAL_ERROR'
-} as const
+    internal: 'INTERNAL_ERROR',
+} as const;
 
-export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes]
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

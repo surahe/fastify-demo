@@ -8,65 +8,65 @@
  */
 
 export interface LiveAggregateQuery {
-    failSegments?: string
+    failSegments?: string;
 }
 
 export interface LiveRoomParams {
-    roomId: string
+    roomId: string;
 }
 
 export interface LiveRoomData {
-    roomId: string
-    title: string
-    status: string
+    roomId: string;
+    title: string;
+    status: string;
     streamer: {
-        id: string
-        nickname: string
-    } | null
+        id: string;
+        nickname: string;
+    } | null;
 }
 
 export interface LiveProductItem {
-    productId: string
-    name: string
-    price: number
+    productId: string;
+    name: string;
+    price: number;
 }
 
 export interface LiveRecommendationItem {
-    productId: string
-    name: string
+    productId: string;
+    name: string;
 }
 
 export interface LiveCouponData {
-    available: boolean
-    couponId?: string
-    discountText?: string
+    available: boolean;
+    couponId?: string;
+    discountText?: string;
 }
 
 export interface DegradationItem {
-    segment: string
-    strategy: 'fallback'
-    reason?: string
+    segment: string;
+    strategy: 'fallback';
+    reason?: string;
 }
 
 export interface SegmentResult<T> {
     // 这里把“值”和“是否降级”一起返回，是为了让聚合层能统一处理不同片段的结果。
-    value: T
-    degraded: boolean
-    reason?: string
+    value: T;
+    degraded: boolean;
+    reason?: string;
 }
 
 export interface LiveAggregateResponse {
-    success: boolean
-    code: 'OK' | 'PARTIAL_SUCCESS'
-    message: string
+    success: boolean;
+    code: 'OK' | 'PARTIAL_SUCCESS';
+    message: string;
     data: {
-        room: LiveRoomData
-        productList: LiveProductItem[]
-        coupon: LiveCouponData
-        recommendation: LiveRecommendationItem[]
-    }
+        room: LiveRoomData;
+        productList: LiveProductItem[];
+        coupon: LiveCouponData;
+        recommendation: LiveRecommendationItem[];
+    };
     degradation: {
-        degraded: boolean
-        items: DegradationItem[]
-    }
+        degraded: boolean;
+        items: DegradationItem[];
+    };
 }

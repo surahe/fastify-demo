@@ -1,6 +1,6 @@
-import helmet from '@fastify/helmet'
-import type { FastifyPluginAsync } from 'fastify'
-import fp from 'fastify-plugin'
+import helmet from '@fastify/helmet';
+import type { FastifyPluginAsync } from 'fastify';
+import fp from 'fastify-plugin';
 
 /*
  * 这个插件负责补安全响应头。
@@ -16,10 +16,10 @@ const securityPlugin: FastifyPluginAsync = async (fastify) => {
         global: true,
         // 这里关闭 CSP，是因为学习项目和 Swagger UI 在本地开发时更容易受 CSP 影响。
         // 真实项目上线前，通常要结合前端资源加载方式重新评估 CSP 策略。
-        contentSecurityPolicy: false
-    })
-}
+        contentSecurityPolicy: false,
+    });
+};
 
 export default fp(securityPlugin, {
-    name: 'security'
-})
+    name: 'security',
+});

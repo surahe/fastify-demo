@@ -1,7 +1,7 @@
-import cors from '@fastify/cors'
-import type { FastifyPluginAsync } from 'fastify'
-import fp from 'fastify-plugin'
-import appConfig from '../../config'
+import cors from '@fastify/cors';
+import type { FastifyPluginAsync } from 'fastify';
+import fp from 'fastify-plugin';
+import appConfig from '../../config';
 
 /*
  * 这个插件负责跨域访问控制。
@@ -13,7 +13,7 @@ import appConfig from '../../config'
  */
 
 const corsPlugin: FastifyPluginAsync = async (fastify) => {
-    const allowedOrigins = new Set(appConfig.cors.allowedOrigins)
+    const allowedOrigins = new Set(appConfig.cors.allowedOrigins);
 
     await fastify.register(cors, {
         credentials: false,
@@ -23,16 +23,16 @@ const corsPlugin: FastifyPluginAsync = async (fastify) => {
         origin(origin, callback) {
             if (!origin) {
                 // 没有 origin 的请求通常不是浏览器跨域场景，比如服务间调用或本地工具调用。
-                callback(null, true)
-                return
+                callback(null, true);
+                return;
             }
 
             // 只允许配置里声明过的来源访问，避免把接口无条件开放给任意网页。
-            callback(null, allowedOrigins.has(origin))
-        }
-    })
-}
+            callback(null, allowedOrigins.has(origin));
+        },
+    });
+};
 
 export default fp(corsPlugin, {
-    name: 'cors'
-})
+    name: 'cors',
+});
