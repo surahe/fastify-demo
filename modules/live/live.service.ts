@@ -1,3 +1,5 @@
+import type { FastifyBaseLogger } from 'fastify';
+import { LOG_EVENTS } from '../../lib/observability/log-events';
 import type {
     DegradationItem,
     LiveAggregateQuery,
@@ -63,7 +65,11 @@ function getLiveRoom(roomId: string): LiveRoomData {
     };
 }
 
-export async function getLiveRoomAggregate(roomId: string, query: LiveAggregateQuery): Promise<LiveAggregateResponse> {
+export async function getLiveRoomAggregate(
+    roomId: string,
+    query: LiveAggregateQuery,
+    logger?: FastifyBaseLogger,
+): Promise<LiveAggregateResponse> {
     const failSet = createFailSet(query);
 
     // Promise.all 的意义是并发获取多个片段。
@@ -121,6 +127,19 @@ export async function getLiveRoomAggregate(roomId: string, query: LiveAggregateQ
             strategy: 'fallback',
             reason: result.reason,
         }));
+
+    if (degradation.length > 0) {
+        logger?.warn(
+            {
+                event: LOG_EVENTS.LIVE_AGGREGATE_DEGRADED,
+                roomId,
+                degradedSegments: degradation.map((item) => item.segment),
+                degradationCount: degradation.length,
+                failSegments: query.failSegments || undefined,
+            },
+            'live aggregate degraded',
+        );
+    }
 
     // 最终响应既返回 data，也显式返回 degradation 信息。
     // 这样前端不仅知道“有没有拿到数据”，还知道“哪些片段其实是兜底值”。

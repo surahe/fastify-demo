@@ -2,6 +2,7 @@ import underPressure from '@fastify/under-pressure';
 import type { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
 import appConfig from '../../config';
+import { LOG_EVENTS } from '../../lib/observability/log-events';
 
 /*
  * under-pressure 插件负责“过载保护”。
@@ -24,6 +25,7 @@ const underPressurePlugin: FastifyPluginAsync = async (fastify) => {
             // 一旦触发过载，先打 warning 日志，方便后续定位到底是哪种资源先到阈值。
             request.log.warn(
                 {
+                    event: LOG_EVENTS.SERVICE_UNDER_PRESSURE,
                     requestId: request.id,
                     pressureType: type,
                     pressureValue: value,

@@ -16,5 +16,5 @@ export async function getLiveRoomAggregateHandler(
     _reply: FastifyReply,
 ) {
     // controller 只做最轻的一层转发：从 request 里取参数，然后调用 service。
-    return getLiveRoomAggregate(request.params.roomId, request.query);
+    return getLiveRoomAggregate(request.params.roomId, request.query, request.log);
 }

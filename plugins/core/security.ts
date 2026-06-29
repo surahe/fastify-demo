@@ -1,6 +1,7 @@
 import helmet from '@fastify/helmet';
 import type { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
+import appConfig from '../../config';
 
 /*
  * 这个插件负责补安全响应头。
@@ -12,11 +13,12 @@ import fp from 'fastify-plugin';
  */
 
 const securityPlugin: FastifyPluginAsync = async (fastify) => {
+    const isDevelopment = appConfig.env === 'development';
+
     await fastify.register(helmet, {
         global: true,
-        // 这里关闭 CSP，是因为学习项目和 Swagger UI 在本地开发时更容易受 CSP 影响。
-        // 真实项目上线前，通常要结合前端资源加载方式重新评估 CSP 策略。
-        contentSecurityPolicy: false,
+        // 开发环境优先保证 Swagger UI 和本地联调体验，其它环境恢复 Helmet 默认 CSP。
+        contentSecurityPolicy: isDevelopment ? false : undefined,
     });
 };
 

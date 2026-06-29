@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import buildApp from '../app';
+
+process.env.NODE_ENV = 'test';
+
+const { default: buildApp } = require('../app');
 
 function createTestApp() {
     return buildApp({ logger: false });
@@ -53,16 +56,15 @@ test('GET /metrics returns basic metrics snapshot', async () => {
     await app.close();
 });
 
-test('GET /docs returns swagger ui in non-production environments', async () => {
+test('security headers keep CSP enabled outside development', async () => {
     const app = createTestApp();
 
     const response = await app.inject({
         method: 'GET',
-        url: '/docs',
+        url: '/health',
     });
 
-    assert.equal(response.statusCode, 200);
-    assert.match(response.headers['content-type'] || '', /text\/html/);
+    assert.match(response.headers['content-security-policy'] || '', /default-src/);
 
     await app.close();
 });

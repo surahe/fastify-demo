@@ -1,5 +1,6 @@
 import buildApp from './app';
 import appConfig from './config';
+import { LOG_EVENTS } from './lib/observability/log-events';
 
 /*
  * server.ts 是程序入口，但它故意保持得很薄。
@@ -25,13 +26,26 @@ const start = async (): Promise<void> => {
             host: appConfig.server.host,
         });
 
-        // 启动成功后打印访问地址和环境，方便本地开发快速确认服务状态。
-        app.log.info(`Server running at http://${displayHost}:${appConfig.server.port}`);
-        app.log.info(`Environment: ${appConfig.env}`);
+        // 启动成功后输出一条结构化日志，后面接日志平台时更容易按字段检索。
+        app.log.info(
+            {
+                event: LOG_EVENTS.SERVER_STARTED,
+                url: `http://${displayHost}:${appConfig.server.port}`,
+                env: appConfig.env,
+            },
+            'server started',
+        );
     } catch (error) {
         // 启动阶段如果失败，通常代表端口冲突、配置异常或插件初始化失败。
         // 这里直接退出进程，避免留下一个“看起来还活着、实际上不可用”的半残状态。
-        app.log.error(error);
+        app.log.error(
+            {
+                event: LOG_EVENTS.SERVER_START_FAILED,
+                env: appConfig.env,
+                error,
+            },
+            'server failed to start',
+        );
         process.exit(1);
     }
 };

@@ -1,10 +1,11 @@
 import autoLoad from '@fastify/autoload';
-import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
+import Fastify, { type FastifyError, type FastifyInstance, type FastifyRequest } from 'fastify';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import appConfig from './config';
 import { AppError, isAppError } from './errors/app-error';
 import { ErrorCodes } from './errors/error-codes';
+import { LOG_EVENTS } from './lib/observability/log-events';
 import corsPlugin from './plugins/core/cors';
 import docsPlugin from './plugins/core/docs';
 import observabilityPlugin from './plugins/core/observability';
@@ -30,6 +31,30 @@ interface BuildAppOptions {
     logger?: boolean;
 }
 
+function logRequestError(params: {
+    request: FastifyRequest;
+    route: string;
+    statusCode: number;
+    code: string;
+    error: FastifyError | AppError;
+}): void {
+    const { request, route, statusCode, code, error } = params;
+
+    request.log.error(
+        {
+            event: LOG_EVENTS.HTTP_ERROR,
+            requestId: request.id,
+            method: request.method,
+            url: request.url,
+            route,
+            statusCode,
+            code,
+            error,
+        },
+        'request failed',
+    );
+}
+
 export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
     const loggerEnabled = options.logger ?? appConfig.fastify.logger;
 
@@ -48,6 +73,8 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
         requestIdHeader: appConfig.fastify.requestIdHeader,
         // 如果前面没有透传 requestId，就在这里生成一个新的，保证每个请求都能被追踪。
         genReqId: () => randomUUID(),
+        // 禁用 Fastify 自动日志
+        disableRequestLogging: true,
         ajv: {
             customOptions: {
                 // 去掉 schema 未声明的额外字段，避免无意义参数继续流入业务层。
@@ -79,46 +106,70 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
     // 统一错误处理器的意义是：不管错误来自 schema、业务、下游还是平台插件，
     // 最终都在这里收口成一致的响应格式，前端和日志都更容易处理。
     app.setErrorHandler((error: FastifyError | AppError, request, reply) => {
-        request.log.error(
-            {
-                requestId: request.id,
-                error,
-            },
-            'request failed',
-        );
+        const route = request.routeOptions.url || request.url;
 
         if (isAppError(error)) {
-            reply.status(error.statusCode).send({
+            const responseBody = {
                 success: false,
                 code: error.code,
                 message: error.message,
                 requestId: request.id,
                 details: error.expose ? error.details : undefined,
+            };
+
+            logRequestError({
+                request,
+                route,
+                statusCode: error.statusCode,
+                code: error.code,
+                error,
             });
+
+            reply.status(error.statusCode).send(responseBody);
             return;
         }
 
         if (error.validation) {
             // Fastify / AJV 的 schema 校验错误会走到这里。
             // 单独拦出来的原因是：这类错误属于“客户端传错参数”，语义上是 400。
-            reply.status(400).send({
+            const responseBody = {
                 success: false,
                 code: ErrorCodes.validation,
                 message: error.message,
                 requestId: request.id,
                 details: error.validation,
+            };
+
+            logRequestError({
+                request,
+                route,
+                statusCode: 400,
+                code: ErrorCodes.validation,
+                error,
             });
+
+            reply.status(400).send(responseBody);
             return;
         }
 
         if (error.statusCode === 429) {
             // 429 大多来自限流插件。这里单独转成统一响应结构，避免前端收到格式不一致的错误体。
-            reply.status(429).send({
+            const responseBody = {
                 success: false,
                 code: ErrorCodes.tooManyRequests,
                 message: 'Too many requests',
                 requestId: request.id,
+            };
+
+            logRequestError({
+                request,
+                route,
+                statusCode: 429,
+                code: ErrorCodes.tooManyRequests,
+                error,
             });
+
+            reply.status(429).send(responseBody);
             return;
         }
 
@@ -127,12 +178,22 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
         // 剩下的错误统一走兜底逻辑：
         // - 5xx 不暴露实现细节，避免把内部错误直接泄漏给前端
         // - 4xx 可以保留错误消息，因为它通常和用户输入有关
-        reply.status(statusCode).send({
+        const responseBody = {
             success: false,
             code: ErrorCodes.internal,
             message: statusCode >= 500 ? 'Something went wrong' : error.message,
             requestId: request.id,
+        };
+
+        logRequestError({
+            request,
+            route,
+            statusCode,
+            code: ErrorCodes.internal,
+            error,
         });
+
+        reply.status(statusCode).send(responseBody);
     });
 
     // 未匹配到路由时，统一返回标准 404 结构。
