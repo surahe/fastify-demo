@@ -76,14 +76,12 @@ const healthRoutePlugin: FastifyPluginAsync = async (fastify) => {
         async (_request, reply) => {
             // /readiness 比 /health 更严格：它要回答“当前服务是否适合继续接流量”。
             const upstream = fastify.upstreamRegistry.readiness();
-            const cacheReady = fastify.appCache.isReady();
-            const isReady = cacheReady && upstream.isReady && !fastify.isUnderPressure();
+            const isReady = upstream.isReady && !fastify.isUnderPressure();
 
             // 503 的意义不是“进程挂了”，而是“服务当前不适合接入新的正式流量”。
             reply.code(isReady ? 200 : 503).send({
                 status: isReady ? 'ready' : 'degraded',
                 checks: {
-                    cache: cacheReady,
                     upstream,
                     underPressure: fastify.isUnderPressure(),
                 },

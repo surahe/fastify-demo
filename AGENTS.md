@@ -116,7 +116,6 @@
 
 ### 通用基础库
 
-- `lib/cache/ttl-cache.ts`：基础 TTL 缓存
 - `lib/http/http-client.ts`：带超时、重试、熔断、fallback 的 HTTP client 骨架
 - `lib/http/upstream-registry.ts`：统一注册和管理下游服务 client
 - `lib/observability/metrics-store.ts`：内存版 metrics 聚合
@@ -165,7 +164,6 @@
 
 当前注入的实例能力：
 
-- `fastify.appCache`
 - `fastify.metricsStore`
 - `fastify.upstreamRegistry`
 

@@ -59,10 +59,6 @@ export interface AppConfig {
         maxRssBytes: number;
         maxEventLoopUtilization: number;
     };
-    cache: {
-        // 当前项目虽然不接 Redis，但仍然保留了一个本地内存缓存能力，所以这里要有缓存 TTL 配置。
-        ttlMs: number;
-    };
     upstreamDefaults: {
         // 这组是“调用后端服务时的默认策略”，属于 BFF 非常关键的基础配置。
         timeoutMs: number;
@@ -153,11 +149,6 @@ const underPressureEnvSchema = z.object({
     UNDER_PRESSURE_MAX_EVENT_LOOP_UTILIZATION: z.coerce.number().min(0).max(1).default(0.98),
 });
 
-const cacheEnvSchema = z.object({
-    // 当前是本地缓存 TTL。即使未来不接 Redis，这个配置也能控制内存缓存保留多久。
-    CACHE_TTL_MS: z.coerce.number().int().positive().default(30_000),
-});
-
 const upstreamDefaultsEnvSchema = z.object({
     // 这一组是 BFF 调后端服务时最关键的默认策略：
     // 超时多久、失败后是否重试、多久重试一次、连续失败多少次后打开熔断器。
@@ -192,7 +183,6 @@ const envSchema = z.object({
     ...rateLimitEnvSchema.shape,
     ...docsEnvSchema.shape,
     ...underPressureEnvSchema.shape,
-    ...cacheEnvSchema.shape,
     ...upstreamDefaultsEnvSchema.shape,
     ...upstreamEnvSchema.shape,
 });
@@ -255,10 +245,6 @@ const appConfig: AppConfig = {
         maxRssBytes: envValues.UNDER_PRESSURE_MAX_RSS_BYTES,
         // maxEventLoopUtilization 是事件循环利用率阈值。
         maxEventLoopUtilization: envValues.UNDER_PRESSURE_MAX_EVENT_LOOP_UTILIZATION,
-    },
-    cache: {
-        // ttlMs 是本地缓存默认保留时间，单位是毫秒。
-        ttlMs: envValues.CACHE_TTL_MS,
     },
     upstreamDefaults: {
         // timeoutMs 是所有下游请求默认超时时间。
